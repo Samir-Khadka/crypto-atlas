@@ -222,15 +222,30 @@ def _parse_cert_der(der: bytes) -> dict:
 
 def get_leaf_cert(host: str, port: int,
                   timeout: float = 10.0) -> dict:
-    """The leaf certificate, as the server presents it."""
-    sock = _handshake(host, port, timeout)
-    try:
-        der = sock.getpeercert(binary_form=True)
-    finally:
-        sock.close()
-    if not der:
-        raise OSError("server presented no certificate")
-    return _parse_cert_der(der)
+    """The leaf certificate, as the server presents it.
+
+    Tries the newest version first and falls back to older ones:
+    a server that only speaks TLS 1.0 still has a certificate, and
+    the scanner must read it. Each attempt pins both ends of the
+    version range, because the runtime's default minimum version
+    varies by build (one build accepts TLS 1.0 by default, another
+    refuses it) and the scanner must not depend on that."""
+    last_error: Exception | None = None
+    for _, version in reversed(VERSIONS):
+        try:
+            sock = _handshake(host, port, timeout,
+                              min_version=version, max_version=version)
+        except Exception as exc:
+            last_error = exc
+            continue
+        try:
+            der = sock.getpeercert(binary_form=True)
+        finally:
+            sock.close()
+        if not der:
+            raise OSError("server presented no certificate")
+        return _parse_cert_der(der)
+    raise OSError(f"could not read the certificate: {last_error}")
 
 
 def get_chain(host: str, port: int,
