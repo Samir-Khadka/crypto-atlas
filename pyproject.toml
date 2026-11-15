@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crypto-atlas"
-version = "0.2.0"
+version = "0.3.0"
 description = "A developer-friendly, open-source-first cryptographic inventory — find where crypto lives, build a CBOM, rank what to fix first"
 authors = [{name = "Samir Khadka"}]
 license = {text = "MIT"}
@@ -14,6 +14,7 @@ dependencies = [
     "tree-sitter-javascript>=0.25",
     "tree-sitter-typescript>=0.23",
     "tree-sitter-go>=0.25",
+    "tree-sitter-java>=0.23",
     "jsonschema>=4.0",
     "cryptography>=42",
 ]

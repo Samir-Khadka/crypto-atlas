@@ -6,8 +6,9 @@ certificates, and live endpoints — build a CBOM (cryptographic bill
 of materials), rank what to fix first, and prove the migration to
 post-quantum cryptography.
 
-**Status: v0.2.0** — the code scanner plus the TLS scanner. MIT
-licensed, CI green on Python 3.11 and 3.12.
+**Status: v0.3.0** — the code scanner (Python, JS/TS, Go, Java),
+plus the TLS scanner. MIT licensed, CI green on Python 3.11 and
+3.12.
 
 ## Why
 
@@ -79,15 +80,32 @@ Two honest limits:
 | TLS disabled / old version | `CERT_NONE`, `rejectUnauthorized: false`, `InsecureSkipVerify`, TLS 1.0/1.1, weak nginx cipher lists, RSA/ECC certificates and keys |
 | Post-quantum | ML-KEM / ML-DSA / SLH-DSA already in use — recorded as migrated, not as a problem |
 
-Languages: Python (via `ast`), JavaScript/TypeScript and Go (via
-tree-sitter), plus nginx/Apache configs and PEM certificates.
+Languages: Python (via `ast`), JavaScript/TypeScript, Go and Java
+(via tree-sitter), plus nginx/Apache configs and PEM certificates.
 
 ## Ranking
 
 Risk = weakness × lifetime × exposure × sensitivity, each 1–5.
 Defaults are 3 (unknown = middle, honestly). Pass `--profile` with
-a JSON file to set them for your data. Quick wins — high risk with
-a one-line fix — are listed separately.
+a JSON file to set them for your data — see `profile.example.json`.
+Quick wins — high risk with a one-line fix — are listed separately.
+
+The three weights mean:
+
+- **lifetime** — how long the protected data must stay secret.
+  5 = 15+ years (medical records, identity documents, anything
+  an attacker could decrypt later and still use); 1 = under a
+  year. This is the "harvest now, decrypt later" weight: data
+  that must stay secret for 15+ years ranks first, because a
+  quantum computer in 2035 breaks what is recorded today.
+- **exposure** — 5 = internet-facing, 1 = offline.
+- **sensitivity** — 5 = PII, financial, health, or secrets.
+
+The `rules` section overrides the weights per rule, so data
+lifetime is weighted by what the finding protects. In the example,
+a hardcoded key gets lifetime 5 (it guards long-lived data) while
+a TLS finding gets lifetime 2 (a short-lived session). A finding's
+risk is its weakness times the weights that apply to it.
 
 ## Accuracy
 
@@ -101,8 +119,9 @@ fired), so a developer can judge it in seconds.
 
 - **v0.2** — TLS scanner: endpoint inventory and PQ-readiness
   (does the server negotiate hybrid X25519MLKEM768?) — **done**
-- **v0.3** — Risk ranking with data-lifetime weighting; Java as
-  the fourth language
+- **v0.3** — Risk ranking with data-lifetime weighting (per-rule
+  profile overrides, documented in `profile.example.json`); Java
+  as the fourth language — **done**
 - **v0.4** — Auto-remediation: pull requests for common fixes
 - **v0.5** — Compliance reports mapped to NIST IR 8547, CNSA 2.0,
   the EU Roadmap, and the UK NCSC timeline; GitHub Action

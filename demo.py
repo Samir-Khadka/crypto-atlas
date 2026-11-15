@@ -45,6 +45,16 @@ def main() -> int:
             print(f"    risk {item['risk']:>3}  {item['algorithm']:<10} "
                   f"{item['file']}:{item['line']} — {item['evidence']}")
 
+    # Java: scan the Java fixtures (true positives + clean)
+    from crypto_atlas.scanners.java_scanner import scan_java
+    for name in ("java_crypto.java", "java_clean.java"):
+        path = Path(__file__).parent / "tests" / "fixtures" / name
+        findings = scan_java(name, path.read_text(encoding="utf-8"))
+        print(f"--- Java {name}: {len(findings)} findings")
+        for item in build_report(findings, profile, name)["top"][:4]:
+            print(f"    risk {item['risk']:>3}  {item['algorithm']:<10} "
+                  f"{item['file']}:{item['line']} — {item['evidence']}")
+
     # TLS: a local server we control (TLS 1.2 only, RSA-2048 cert)
     from tests.test_tls_scanner import TLSTestServer
     with TLSTestServer() as server:

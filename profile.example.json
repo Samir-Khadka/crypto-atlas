@@ -1,0 +1,17 @@
+{
+  "lifetime": 3,
+  "exposure": 3,
+  "sensitivity": 3,
+  "rules": {
+    "hardcoded-key": {
+      "lifetime": 5,
+      "sensitivity": 5
+    },
+    "rsa-keygen": {
+      "lifetime": 5
+    },
+    "tls-old-version": {
+      "lifetime": 2
+    }
+  }
+}
