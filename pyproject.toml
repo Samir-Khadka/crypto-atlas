@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crypto-atlas"
+version = "0.1.0"
+description = "A developer-friendly, open-source-first cryptographic inventory — find where crypto lives, build a CBOM, rank what to fix first"
+authors = [{name = "Samir Khadka"}]
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "tree-sitter>=0.25",
+    "tree-sitter-javascript>=0.25",
+    "tree-sitter-typescript>=0.25",
+    "tree-sitter-go>=0.25",
+    "jsonschema>=4.0",
+    "cryptography>=42",
+]
+
+[project.scripts]
+crypto-atlas = "crypto_atlas.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["crypto_atlas*"]
