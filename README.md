@@ -6,8 +6,8 @@ certificates, and live endpoints — build a CBOM (cryptographic bill
 of materials), rank what to fix first, and prove the migration to
 post-quantum cryptography.
 
-**Status: v0.1.0** — the code scanner. MIT licensed, CI green on
-Python 3.11 and 3.12.
+**Status: v0.2.0** — the code scanner plus the TLS scanner. MIT
+licensed, CI green on Python 3.11 and 3.12.
 
 ## Why
 
@@ -33,6 +33,39 @@ That writes `cbom.json` (CycloneDX 1.7, validated against the 1.7
 JSON schema) and `report.md` (the ranked top 10 things to fix) into
 the current directory. Exit code 0 = clean, 1 = a finding at or
 above the fail threshold, 2 = the scan failed.
+
+## What v0.2 adds: the TLS scanner
+
+```bash
+python -m crypto_atlas tls example.com example.org
+python -m crypto_atlas tls --file domains.txt
+```
+
+For each endpoint it reports which TLS versions it accepts, which
+cipher suites it accepts, the leaf certificate's key type and
+signature algorithm, and whether it negotiates the hybrid
+post-quantum group X25519MLKEM768. Output is the same CBOM +
+report pair, with `protocol` and `certificate` assets.
+
+Two honest limits:
+
+- **PQ-readiness needs OpenSSL 3.5 or later in the runtime.** On
+  an older runtime the check reports `unknown` instead of
+  guessing. The code is ready; the runtime is the gate.
+- **Broken ciphers (RC4, DES, 3DES, NULL) live in OpenSSL's
+  legacy provider**, which most runtimes do not load. On such a
+  runtime the probe reports them as `untested`, not as clean.
+  Deprecated CBC ciphers (AES128-SHA, AES256-SHA) are testable
+  anywhere and are reported at weakness 3.
+- **In a network that terminates TLS** (a corporate proxy, or a
+  sandbox egress proxy), the version, cipher, and certificate are
+  the proxy's, not the destination's. The report says so when it
+  detects a proxy in use.
+- **The scanner flags its own inspection code.** `tls_scanner.py`
+  disables verification on purpose — an inspector has to read
+  self-signed and expired certificates, not trust them. Same
+  reason as Kavach's scanner. The finding is correct; the code is
+  deliberate.
 
 ## What v0.1 finds
 
@@ -67,7 +100,7 @@ fired), so a developer can judge it in seconds.
 ## Roadmap
 
 - **v0.2** — TLS scanner: endpoint inventory and PQ-readiness
-  (does the server negotiate hybrid X25519MLKEM768?)
+  (does the server negotiate hybrid X25519MLKEM768?) — **done**
 - **v0.3** — Risk ranking with data-lifetime weighting; Java as
   the fourth language
 - **v0.4** — Auto-remediation: pull requests for common fixes

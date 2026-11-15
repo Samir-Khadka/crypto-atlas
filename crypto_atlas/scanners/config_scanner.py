@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 
 from ..findings import Finding
+from ..keys import weakness_for_curve, weakness_for_rsa
 from ..rules import RULES
 
 _SSL_PROTOCOLS = re.compile(
@@ -19,22 +20,6 @@ _SSL_CIPHERS = re.compile(
     r"^\s*ssl_ciphers\s+([^;]+);", re.MULTILINE)
 _WEAK_CIPHER = re.compile(r"\b(RC4|DES|3DES|DES-CBC|RC4-MD5)\b",
                           re.IGNORECASE)
-
-
-def _weakness_for_rsa(size: int | None) -> int:
-    if size is None or size < 2048:
-        return 5
-    return 4 if size == 2048 else 3
-
-
-def _weakness_for_curve(name: str | None) -> int:
-    if not name:
-        return 4
-    if any(c in name for c in ("secp192", "secp224")):
-        return 5
-    if any(c in name for c in ("secp384", "secp521")):
-        return 3
-    return 4
 
 
 def scan_config(path: str, text: str) -> list[Finding]:
@@ -98,7 +83,7 @@ def scan_pem(path: str, data: bytes) -> list[Finding]:
             size = pub.key_size
             findings.append(Finding(
                 rule_id="rsa-keygen", algorithm="RSA",
-                weakness=_weakness_for_rsa(size), file=path, line=1,
+                weakness=weakness_for_rsa(size), file=path, line=1,
                 snippet=f"certificate: {cert.subject.rfc4514_string()}",
                 evidence=f"certificate uses RSA-{size}",
                 fix=RULES["rsa-keygen"]["fix"], language="config",
@@ -109,7 +94,7 @@ def scan_pem(path: str, data: bytes) -> list[Finding]:
             curve = pub.curve.name
             findings.append(Finding(
                 rule_id="ecc-keygen", algorithm="ECC",
-                weakness=_weakness_for_curve(curve), file=path, line=1,
+                weakness=weakness_for_curve(curve), file=path, line=1,
                 snippet=f"certificate: {cert.subject.rfc4514_string()}",
                 evidence=f"certificate uses ECC {curve}",
                 fix=RULES["ecc-keygen"]["fix"], language="config",
@@ -126,7 +111,7 @@ def scan_pem(path: str, data: bytes) -> list[Finding]:
             size = key.key_size
             findings.append(Finding(
                 rule_id="rsa-keygen", algorithm="RSA",
-                weakness=_weakness_for_rsa(size), file=path, line=1,
+                weakness=weakness_for_rsa(size), file=path, line=1,
                 snippet="private key",
                 evidence=f"private key is RSA-{size}",
                 fix=RULES["rsa-keygen"]["fix"], language="config",
@@ -138,7 +123,7 @@ def scan_pem(path: str, data: bytes) -> list[Finding]:
             curve = key.curve.name
             findings.append(Finding(
                 rule_id="ecc-keygen", algorithm="ECC",
-                weakness=_weakness_for_curve(curve), file=path, line=1,
+                weakness=weakness_for_curve(curve), file=path, line=1,
                 snippet="private key",
                 evidence=f"private key is ECC {curve}",
                 fix=RULES["ecc-keygen"]["fix"], language="config",

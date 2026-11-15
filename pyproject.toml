@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crypto-atlas"
-version = "0.1.0"
+version = "0.2.0"
 description = "A developer-friendly, open-source-first cryptographic inventory — find where crypto lives, build a CBOM, rank what to fix first"
 authors = [{name = "Samir Khadka"}]
 license = {text = "MIT"}
