@@ -12,7 +12,7 @@ requires-python = ">=3.11"
 dependencies = [
     "tree-sitter>=0.25",
     "tree-sitter-javascript>=0.25",
-    "tree-sitter-typescript>=0.25",
+    "tree-sitter-typescript>=0.23",
     "tree-sitter-go>=0.25",
     "jsonschema>=4.0",
     "cryptography>=42",
